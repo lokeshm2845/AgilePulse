@@ -1,0 +1,21 @@
+# Render Blueprint - one web service runs the API, Socket.IO and the React app.
+# Render dashboard -> New -> Blueprint -> pick this repo.
+services:
+  - type: web
+    name: agilepulse
+    runtime: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+      - key: MONGO_URI
+        sync: false # you paste your Atlas connection string in the dashboard
+      - key: JWT_SECRET
+        generateValue: true # Render generates a strong random secret
+      - key: CLIENT_URL
+        sync: false # e.g. https://agilepulse.onrender.com

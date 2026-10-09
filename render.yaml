@@ -5,6 +5,7 @@ services:
     name: agilepulse
     runtime: node
     plan: free
+    region: singapore # closest to MongoDB Atlas Mumbai and to users in India
     buildCommand: npm run build
     startCommand: npm start
     healthCheckPath: /api/health

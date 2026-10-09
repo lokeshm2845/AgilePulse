@@ -6,6 +6,7 @@
  */
 require('dotenv').config();
 const mongoose = require('mongoose');
+const connectDB = require('./config/db');
 const bcrypt = require('bcryptjs');
 const User = require('./models/User');
 const Sprint = require('./models/Sprint');
@@ -70,8 +71,7 @@ async function seed() {
 module.exports = { seed, DEMO_USERS, DEMO_PASSWORD };
 
 if (require.main === module) {
-  mongoose
-    .connect(process.env.MONGO_URI)
+  connectDB()
     .then(seed)
     .then(() => mongoose.disconnect())
     .catch((err) => {

@@ -52,6 +52,11 @@ Open http://localhost:5173 and sign in with a demo account
 | Developer      | dev@agilepulse.dev    |
 | Developer      | dev2@agilepulse.dev   |
 
+On the login page, pick **who is signing in** (Product Owner / Scrum Master / Developer).
+The server checks the choice matches the account role. The dashed **Demo account → Fill in**
+button fills the demo login for the selected role; hide it on a public deployment by setting
+`VITE_HIDE_DEMO=true` as a build environment variable.
+
 ### Option B – MongoDB Atlas
 
 1. Edit `backend/.env` and put your real Atlas connection string in `MONGO_URI`

@@ -13,6 +13,7 @@ const MAX_FAILED_ATTEMPTS = 3; // FR-06
 const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 const TOKEN_EXPIRY = '1d';
 const COOKIE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const ROLE_NAMES = { PO: 'Product Owner', SM: 'Scrum Master', DEV: 'Developer' };
 
 function cookieOptions() {
   // 'lax' when frontend and API share one domain (recommended deployment).
@@ -87,9 +88,21 @@ const login = asyncHandler(async (req, res) => {
     return invalid();
   }
 
-  // Successful login - reset lock counters
+  // Password is correct - reset lock counters
   user.failedLoginAttempts = 0;
   user.lockUntil = null;
+
+  // Optional "Who's signing in?" check from the login screen. Only checked after
+  // the password matched, so it never reveals anything about other accounts.
+  const { role } = req.body;
+  if (role && role !== user.role) {
+    await user.save();
+    return res.status(403).json({
+      message: `This account is registered as ${ROLE_NAMES[user.role]}. Select "${ROLE_NAMES[user.role]}" to sign in.`,
+      role: user.role,
+    });
+  }
+
   user.lastLogin = new Date();
   await user.save();
 

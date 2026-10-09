@@ -77,6 +77,26 @@ describe('POST /api/auth/login', () => {
     expect(log).not.toBeNull();
   });
 
+  test('accepts the matching role selected on the login screen', async () => {
+    const res = await request(app).post('/api/auth/login').send({ email: validUser.email, password: validUser.password, role: 'PO' });
+    expect(res.status).toBe(200);
+    expect(res.body.user.role).toBe('PO');
+  });
+
+  test('rejects a mismatched role (403) and does not set a cookie', async () => {
+    const res = await request(app).post('/api/auth/login').send({ email: validUser.email, password: validUser.password, role: 'DEV' });
+    expect(res.status).toBe(403);
+    expect(res.body.message).toMatch(/registered as Product Owner/);
+    expect(res.body.role).toBe('PO');
+    expect(res.headers['set-cookie']).toBeUndefined();
+  });
+
+  test('a wrong password with a role still returns the generic 401', async () => {
+    const res = await request(app).post('/api/auth/login').send({ email: validUser.email, password: 'nope', role: 'DEV' });
+    expect(res.status).toBe(401);
+    expect(res.body.message).toBe('Invalid email or password');
+  });
+
   test('rejects a wrong password (401)', async () => {
     const res = await request(app).post('/api/auth/login').send({ email: validUser.email, password: 'wrongpass' });
     expect(res.status).toBe(401);

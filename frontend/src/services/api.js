@@ -65,7 +65,7 @@ async function withRetry(fn, retries = 3) {
 // ---- Auth ----
 export const authApi = {
   register: (data) => api.post('/auth/register', data).then((r) => r.data),
-  login: (email, password) => api.post('/auth/login', { email, password }).then((r) => r.data),
+  login: (email, password, role) => api.post('/auth/login', { email, password, role }).then((r) => r.data),
   logout: () => api.post('/auth/logout').then((r) => r.data),
   me: () => api.get('/auth/me').then((r) => r.data.user),
   users: () => api.get('/auth/users').then((r) => r.data),

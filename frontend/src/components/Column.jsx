@@ -8,7 +8,7 @@ import { COLUMN_META } from '../utils/constants';
  *   dropState = 'valid'   -> green, "Drop to move here"
  *   dropState = 'invalid' -> dimmed (workflow rule would reject it)
  */
-export default function Column({ status, tasks, canMove, highlightId, rejectedId, draggingId, dropState, onDropTask, onMoveNext, onDragStart, onDragEnd }) {
+export default function Column({ status, tasks, canMove, highlightId, rejectedId, draggingId, dropState, onDropTask, onMoveNext, onDragStart, onDragEnd, onOpen }) {
   const [isOver, setIsOver] = useState(false);
   const meta = COLUMN_META[status];
   const points = tasks.reduce((sum, t) => sum + t.storyPoints, 0);
@@ -41,7 +41,7 @@ export default function Column({ status, tasks, canMove, highlightId, rejectedId
       }}
       onDrop={handleDrop}
       aria-label={`${status} column`}
-      className={`flex min-h-[28rem] flex-col rounded-2xl border border-slate-200/70 bg-gradient-to-b ${meta.tint} to-slate-50/60 p-3 transition-all duration-200 ${stateClass}`}
+      className={`flex min-h-[18rem] w-[82vw] sm:min-h-[28rem] max-w-sm shrink-0 snap-center flex-col rounded-2xl sm:w-auto sm:max-w-none border border-slate-200/70 bg-gradient-to-b ${meta.tint} to-slate-50/60 p-3 transition-all duration-200 ${stateClass}`}
     >
       <header className="mb-3 flex items-center gap-2 px-1">
         <span className={`h-2.5 w-2.5 rounded-full ${meta.dot}`} />
@@ -62,6 +62,7 @@ export default function Column({ status, tasks, canMove, highlightId, rejectedId
             onMoveNext={onMoveNext}
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
+            onOpen={onOpen}
           />
         ))}
 

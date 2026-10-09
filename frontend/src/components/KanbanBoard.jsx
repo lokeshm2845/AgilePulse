@@ -12,9 +12,11 @@ import { useRealtime } from '../context/RealtimeContext';
 import { useToast } from '../context/ToastContext';
 import { errorMessage, sprintApi, taskApi } from '../services/api';
 import { subscribe } from '../services/socket';
-import { STATUSES, daysLeft, formatShortDate, nextStatus, validateTransition } from '../utils/constants';
+import { COLUMN_META, STATUSES, daysLeft, formatShortDate, nextStatus, validateTransition } from '../utils/constants';
 import ActivityFeed from './ActivityFeed';
 import Column from './Column';
+import TaskDetail from './TaskDetail';
+import { burst } from '../utils/celebrate';
 import { CheckIcon, ClockIcon, InfoIcon, RocketIcon, TargetIcon, UsersIcon } from './Icons';
 
 function StatCard({ icon: Icon, label, value, sub, accent }) {
@@ -45,6 +47,7 @@ export default function KanbanBoard() {
   const [highlightId, setHighlightId] = useState(null);
   const [rejectedId, setRejectedId] = useState(null);
   const [dragging, setDragging] = useState(null);
+  const [detailId, setDetailId] = useState(null);
 
   const flash = (id) => {
     setHighlightId(id);
@@ -133,7 +136,12 @@ export default function KanbanBoard() {
       const updated = await taskApi.move(taskId, newStatus);
       setTasks((prev) => prev.map((t) => (t._id === taskId ? updated : t)));
       flash(taskId);
-      if (newStatus === 'Done') toast.success(`"${task.title}" is done!`, { title: 'Nice work 🎉' });
+      if (newStatus === 'Done') {
+        toast.success(`"${task.title}" is done!`, { title: 'Nice work 🎉' });
+        const el = document.querySelector(`[data-task-id="${taskId}"]`);
+        const r = el?.getBoundingClientRect();
+        burst(r ? (r.left + r.width / 2) / window.innerWidth : 0.5, r ? (r.top + r.height / 2) / window.innerHeight : 0.5);
+      }
     } catch (err) {
       setTasks(previous); // roll back
       reject(taskId);
@@ -250,7 +258,27 @@ export default function KanbanBoard() {
 
       {/* ---------- Board + feed ---------- */}
       <div className="grid gap-6 2xl:grid-cols-[1fr_20rem]">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="min-w-0">
+        {/* Phone: tap a tab to jump to that column */}
+        <div className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 no-scrollbar sm:hidden" role="tablist" aria-label="Columns">
+          {STATUSES.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => {
+                const col = document.querySelector(`section[aria-label="${s} column"]`);
+                const row = col?.parentElement;
+                if (row) row.scrollTo({ left: col.offsetLeft - row.offsetLeft - 16, behavior: 'smooth' });
+              }}
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm active:scale-95"
+            >
+              <span className={`h-2 w-2 rounded-full ${COLUMN_META[s].dot}`} />
+              {s}
+              <span className="rounded-full bg-slate-100 px-1.5 text-[10px] text-slate-500">{byStatus[s].length}</span>
+            </button>
+          ))}
+        </div>
+        <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 no-scrollbar sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 xl:grid-cols-4">
           {STATUSES.map((status) => (
             <Column
               key={status}
@@ -265,16 +293,27 @@ export default function KanbanBoard() {
               onMoveNext={handleMoveNext}
               onDragStart={setDragging}
               onDragEnd={() => setDragging(null)}
+              onOpen={(t) => setDetailId(t._id)}
             />
           ))}
+        </div>
         </div>
         <div className="2xl:sticky 2xl:top-8 2xl:h-[calc(100vh-14rem)] h-96">
           <ActivityFeed limit={20} />
         </div>
       </div>
 
+      <TaskDetail
+        task={tasks.find((t) => t._id === detailId) || null}
+        canMove={canMove}
+        onMoveNext={handleMoveNext}
+        onClose={() => setDetailId(null)}
+      />
+
+      <p className="text-center text-xs text-slate-400 sm:hidden">Swipe sideways to see all four columns →</p>
+
       {canMove && (
-        <p className="flex items-center gap-2 text-xs text-slate-400">
+        <p className="hidden items-center gap-2 text-xs text-slate-400 sm:flex">
           <CheckIcon className="h-3.5 w-3.5" />
           Drag cards between columns, or focus a card with <kbd className="rounded border border-slate-300 bg-white px-1">Tab</kbd> and press{' '}
           <kbd className="rounded border border-slate-300 bg-white px-1">Enter</kbd> to move it forward.

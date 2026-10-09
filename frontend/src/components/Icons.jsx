@@ -108,3 +108,19 @@ export function Logo({ className = 'h-9 w-9' }) {
     </svg>
   );
 }
+
+export const SearchIcon = make(
+  <>
+    <circle cx="11" cy="11" r="7" />
+    <path d="m21 21-4.3-4.3" />
+  </>
+);
+export const CalendarIcon = make(
+  <>
+    <rect x="3" y="4" width="18" height="18" rx="2" />
+    <path d="M16 2v4M8 2v4M3 10h18" />
+  </>
+);
+export const LayersIcon = make(<path d="m12 2 10 5-10 5L2 7l10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />);
+export const PlayIcon = make(<path d="m6 3 14 9-14 9V3z" />);
+export const FlagIcon = make(<path d="M4 22V4a1 1 0 0 1 1-1h13l-3 5 3 5H5" />);

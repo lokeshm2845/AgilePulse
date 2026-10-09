@@ -69,3 +69,26 @@ test('connected clients receive live activity and presence events', async () => 
 
   client.close();
 });
+
+test('a socket that disconnects immediately does not stay "online" (no ghost users)', async () => {
+  const ghost = await loginAs('SM');
+  const watcher = await loginAs('PO');
+
+  // connect and disconnect before the server finishes looking up the name
+  const quick = ioClient(url, { transports: ['websocket'], auth: { token: ghost.token } });
+  await new Promise((resolve) => quick.on('connect', resolve));
+  quick.close();
+
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  const client = ioClient(url, { transports: ['websocket'], auth: { token: watcher.token } });
+  await new Promise((resolve) => client.on('connect', resolve));
+  const users = await new Promise((resolve) => {
+    client.on('presence', (list) => {
+      if (list.some((u) => u.name === watcher.user.name)) resolve(list);
+    });
+    client.emit('presence:get');
+  });
+
+  expect(users.some((u) => u.name === ghost.user.name)).toBe(false);
+  client.close();
+});

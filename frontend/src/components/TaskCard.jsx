@@ -6,7 +6,7 @@ import { ArrowRightIcon, GripIcon } from './Icons';
  * A single draggable card on the Kanban board.
  * Keyboard support (NFR-15): Tab to focus a card, Enter / → moves it to the next column.
  */
-export default function TaskCard({ task, canMove, highlight, rejected, dragging, onMoveNext, onDragStart, onDragEnd }) {
+export default function TaskCard({ task, canMove, highlight, rejected, dragging, onMoveNext, onDragStart, onDragEnd, onOpen }) {
   const next = nextStatus(task.status);
   const done = task.status === 'Done';
 
@@ -17,6 +17,11 @@ export default function TaskCard({ task, canMove, highlight, rejected, dragging,
   };
 
   const handleKeyDown = (e) => {
+    if (e.key === ' ') {
+      e.preventDefault();
+      onOpen?.(task); // Space opens details
+      return;
+    }
     if (!canMove || !next) return;
     if (e.key === 'Enter' || e.key === 'ArrowRight') {
       e.preventDefault();
@@ -29,12 +34,14 @@ export default function TaskCard({ task, canMove, highlight, rejected, dragging,
       draggable={canMove}
       onDragStart={handleDragStart}
       onDragEnd={onDragEnd}
+      onClick={() => onOpen?.(task)}
       onKeyDown={handleKeyDown}
+      data-task-id={task._id}
       tabIndex={0}
       aria-label={`${task.title}, ${task.storyPoints} points, ${task.priority} priority, ${task.status}`}
       className={`group relative overflow-hidden ${highlight ? "animate-flash" : rejected ? "animate-shake border-rose-300" : "animate-fade-up"} rounded-xl border border-slate-200/80 bg-white p-3.5 pl-4 shadow-soft outline-none transition duration-200
         hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lift focus-visible:ring-4 focus-visible:ring-indigo-500/20
-        ${canMove ? 'cursor-grab active:cursor-grabbing' : ''}
+        ${canMove ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
         ${dragging ? 'scale-[0.98] opacity-40' : ''}
 `}
     >
@@ -60,7 +67,10 @@ export default function TaskCard({ task, canMove, highlight, rejected, dragging,
           {canMove && next && (
             <button
               type="button"
-              onClick={() => onMoveNext(task)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveNext(task);
+              }}
               tabIndex={-1}
               className="flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-semibold text-indigo-600 opacity-0 transition hover:bg-indigo-50 group-focus-within:opacity-100 group-hover:opacity-100"
               title={`Move to ${next}`}
